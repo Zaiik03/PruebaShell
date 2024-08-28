@@ -83,19 +83,16 @@ int main()
 		{
 			int count = command.arguments.size();
 			
-			char* cmd;
-			char* args[count + 2];
+			char* arguments[count + 2];
 			{
-				cmd = command.name.data();
-				args[0] = command.name.data();
+				arguments[0] = command.name.data();
+				arguments[count + 1] = NULLPTR;
 				
 				for(int i = 0; i < count; i++)
-					args[i + 1] = command.arguments[i].data();
-				
-				args[count + 1] = NULLPTR;
+					arguments[i + 1] = command.arguments[i].data();
 			}
 			
-			execvp(cmd, args);
+			execvp(command.name.data(), arguments);
 			
 			cout << "Wrong command" << '\n';
 			
