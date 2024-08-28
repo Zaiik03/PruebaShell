@@ -1,15 +1,58 @@
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <string.h>
 
 #define NULLPTR (nullptr)
 
 using namespace std;
 
-const int MAX_INPUT = 1024;
-const int MAX_ARGUMENTS = 64;
+struct Command
+{
+	string name;
+	
+	vector<string> arguments;
+};
+
+Command getNextCommand()
+{
+	Command command;
+	
+	char c = getchar();
+	string token;
+	
+	while((c != '|') && (c != '\n'))
+	{
+		if(c == ' ' && !token.empty())
+		{
+			if(command.name.empty())
+				command.name = token;
+			
+			else
+				command.arguments.push_back(token);
+			
+			token = "";
+		}
+		
+		else
+			token.push_back(c);
+		
+		c = getchar();
+	}
+	
+	if(!token.empty())
+	{
+		if(command.name.empty())
+			command.name = token;
+		
+		else
+			command.arguments.push_back(token);
+	}
+	
+	return command;
+}
 
 int main()
 {
@@ -17,54 +60,42 @@ int main()
 	{
 		cout << "user$ ";
 		
-		char line[MAX_INPUT];
-		{
-			fgets(line, sizeof(line), stdin);
-		}
+		Command command = getNextCommand();
 		
-		for(int i = 0; i < MAX_INPUT; i++)
-		{
-			if(line[i] == '\n')
-				line[i] = '\0';
-		}
-		
-		char* command;
-		char* arguments[MAX_ARGUMENTS];
-		{
-			int index = 0;
-			
-			arguments[index] = strtok(line, " ");
-			
-			while((index < MAX_ARGUMENTS) && (arguments[index] != NULLPTR))
-			{
-				index += 1;
-				
-				arguments[index] = strtok(NULLPTR, " ");
-			}
-			
-			command = arguments[0];
-		}
-		
-		if(command == NULLPTR)
+		if(command.name == "")
 			continue;
 		
-		if(strcmp(command, "exit") == 0)
+		if(command.name == "exit")
 			break;
 		
-		if(strcmp(command, "cd") == 0)
+		if(command.name == "cd")
 		{
-			if(arguments[1] == NULLPTR)
-				cout << "Argument required" << '\n';
+			if(command.arguments.size() != 1)
+				cout << "Wrong number of arguments" << '\n';
 			
 			else
-				chdir(arguments[1]);
+				chdir(command.arguments[0].data());
 			
 			continue;
 		}
 		
 		if(fork() == 0)
 		{
-			execvp(command, arguments);
+			int count = command.arguments.size();
+			
+			char* cmd;
+			char* args[count + 2];
+			{
+				cmd = command.name.data();
+				args[0] = command.name.data();
+				
+				for(int i = 0; i < count; i++)
+					args[i + 1] = command.arguments[i].data();
+				
+				args[count + 1] = NULLPTR;
+			}
+			
+			execvp(cmd, args);
 			
 			cout << "Wrong command" << '\n';
 			
