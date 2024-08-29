@@ -16,30 +16,45 @@ struct Command
 	vector<string> arguments;
 };
 
-Command getNextCommand()
+vector<Command> getNextCommands()
 {
+	vector<Command> commands;
+	
+	char c;
+	
+	string token;
 	Command command;
 	
-	char c = getchar();
-	string token;
-	
-	while((c != '|') && (c != '\n'))
+	while((c = getchar()) != '\n')
 	{
-		if(c == ' ' && !token.empty())
+		switch(c)
 		{
-			if(command.name.empty())
-				command.name = token;
+			case ' ':
+			{
+				if(token.empty())
+					continue;
+				
+				if(command.name.empty())
+					command.name = token;
+				
+				else
+					command.arguments.push_back(token);
+				
+				token = "";
+			} break;
 			
-			else
-				command.arguments.push_back(token);
+			case '|':
+			{
+				commands.push_back(command);
+				
+				command = Command();
+			} break;
 			
-			token = "";
+			default:
+			{
+				token.push_back(c);
+			} break;
 		}
-		
-		else
-			token.push_back(c);
-		
-		c = getchar();
 	}
 	
 	if(!token.empty())
@@ -49,9 +64,11 @@ Command getNextCommand()
 		
 		else
 			command.arguments.push_back(token);
+		
+		commands.push_back(command);
 	}
 	
-	return command;
+	return commands;
 }
 
 int main()
@@ -60,46 +77,73 @@ int main()
 	{
 		cout << "user$ ";
 		
-		Command command = getNextCommand();
+		vector<Command> commands = getNextCommands();
 		
-		if(command.name == "")
+		if(commands.size() == 0)
 			continue;
 		
-		if(command.name == "exit")
+		if(commands[0].name == "exit")
 			break;
 		
-		if(command.name == "cd")
+		if(commands[0].name == "cd")
 		{
-			if(command.arguments.size() != 1)
+			if(commands[0].arguments.size() != 1)
 				cout << "Wrong number of arguments" << '\n';
 			
 			else
-				chdir(command.arguments[0].data());
+				chdir(commands[0].arguments[0].data());
 			
 			continue;
 		}
 		
-		if(fork() == 0)
+		int pipes[commands.size() - 1][2];
+		
+		for(int i = 0; i < commands.size(); i++)
+			pipe(pipes[i]);
+		
+		for(int i = 0; i < commands.size(); i++)
 		{
-			int count = command.arguments.size();
+			Command& command = commands[i];
 			
-			char* arguments[count + 2];
+			if(fork() == 0)
 			{
-				arguments[0] = command.name.data();
-				arguments[count + 1] = NULLPTR;
+				int count = command.arguments.size();
 				
-				for(int i = 0; i < count; i++)
-					arguments[i + 1] = command.arguments[i].data();
+				char* arguments[count + 2];
+				{
+					arguments[0] = command.name.data();
+					arguments[count + 1] = NULLPTR;
+					
+					for(int i = 0; i < count; i++)
+						arguments[i + 1] = command.arguments[i].data();
+				}
+				
+				if(i > 0)
+					dup2(pipes[i][0], STDIN_FILENO);
+				
+				if(i < (commands.size() - 1))
+					dup2(pipes[i + 1][1], STDOUT_FILENO);
+				
+				for(int j = 0; j < commands.size(); j++)
+				{
+					close(pipes[j][0]);
+					close(pipes[j][1]);
+				}
+				
+				execvp(command.name.data(), arguments);
+				
+				cout << "Wrong command" << '\n';
+				
+				break;
 			}
-			
-			execvp(command.name.data(), arguments);
-			
-			cout << "Wrong command" << '\n';
-			
-			break;
 		}
 		
-		else
-			wait(NULLPTR);
+		for(int i = 0; i < commands.size(); i++)
+		{
+			close(pipes[i][0]);
+			close(pipes[i][1]);
+		}
+		
+		wait(NULLPTR);
 	}
 }
