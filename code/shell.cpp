@@ -96,10 +96,15 @@ int main()
 			continue;
 		}
 		
-		int pipes[commands.size() - 1][2];
+		int pipeCount = commands.size() - 1;
 		
-		for(int i = 0; i < commands.size(); i++)
-			pipe(pipes[i]);
+		int pipes[pipeCount][2];
+		
+		if(pipeCount > 0)
+		{
+			for(int i = 0; i < pipeCount; i++)
+				pipe(pipes[i]);
+		}
 		
 		for(int i = 0; i < commands.size(); i++)
 		{
@@ -119,12 +124,12 @@ int main()
 				}
 				
 				if(i > 0)
-					dup2(pipes[i][0], STDIN_FILENO);
+					dup2(pipes[i - 1][0], STDIN_FILENO);
 				
-				if(i < (commands.size() - 1))
-					dup2(pipes[i + 1][1], STDOUT_FILENO);
+				if(i < pipeCount)
+					dup2(pipes[i][1], STDOUT_FILENO);
 				
-				for(int j = 0; j < commands.size(); j++)
+				for(int j = 0; j < pipeCount; j++)
 				{
 					close(pipes[j][0]);
 					close(pipes[j][1]);
@@ -138,12 +143,12 @@ int main()
 			}
 		}
 		
-		for(int i = 0; i < commands.size(); i++)
+		for(int i = 0; i < pipeCount; i++)
 		{
 			close(pipes[i][0]);
 			close(pipes[i][1]);
 		}
 		
-		wait(NULLPTR);
+		while(wait(NULLPTR) > 0);
 	}
 }
