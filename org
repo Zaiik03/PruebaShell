@@ -1,0 +1,29 @@
+
+* La idea seria hacer un programa favs, el cual sea llamado y ejecutado desde la shell a modo de comando -> LISTO
+* favs debe tener como parametro de entrada un array de caracteres que luego sera manejado en el programa -> LISTO
+* Luego hay que manejar cada parametro de entrada de forma individual:
+	** Debo lograr que cada comando ejecutado se guarde en un archivo -> LISTO	
+
+
+* Si el archivo para favoritos esta creado, escribir en el archivo cada comando, con un numero asociado
+* El problema es:
+	* Tengo que guardar en un archivo cada comando que se use -> LISTO
+	* Deberia guardarse cada comando en el archivo solo si el archivo de favoritos esta creado, 
+	  pero no se como comprobarlo -> LISTO
+	* Quiza deberia por defecto guardar los comandos usados en un archivo random, luego si se usa favs guardar,
+	  desde favs leer el arhivo y guardar los comandos en el archivo de favoritos -> LISTO Y SIN REPETICIONES
+	* Se estana causando varios problemas por el uso de rutas relativas, ya que dependiendo de donde este 
+	  parado, los comandos funcionan mal -> IMPORTANTE, DEBO VER COMO ARREGLAR LO DE LAS RUTAS RELATIVAS
+						PARA USAR RUTAS ABSOLUTAS
+
+
+
+* Ahora mismo, todos los comandos que se usan se estan guardando en un archivo temporal. Lo siguiente es hacer
+ que cuando se use el comando favs guardar, debo leer el archivo temporal y guardar en favoritos los comandos
+ de la sesion actual. Recordar validar si el archivo de favoritos esta creado -> LISTO
+
+* Hay un problema: Cuando por ejemplo quiero usar exit, eso deberia borrar el archivo currentSession.txt, sin 
+  embargo, como estoy usando rutas relativas, si no estoy en la carpeta base, no lo elimina -> RUTAS RELATIVAS
+
+* Ahora mismo hay un error con el comando exit. Pasa cuando se ingresa un comando que no existe. Hay que escribir
+  exit n + 1 veces, donde n es la cantidad de comandos ingresados que no existen

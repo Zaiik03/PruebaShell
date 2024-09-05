@@ -1,11 +1,18 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <limits.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #define NULLPTR (nullptr)
+#define RESET "\033[0m"
+#define RED "\033[31m"
+#define CYAN "\033[36m"
+#define MAGENTA "\033[35m"
+
 
 using namespace std;
 
@@ -73,9 +80,10 @@ vector<Command> getNextCommands()
 
 int main()
 {
+	std::ofstream tempFile("./code/currentSession.txt");
 	while(true)
 	{
-		cout << "user$ ";
+		cout << CYAN << "user$ " << RESET;
 		
 		vector<Command> commands = getNextCommands();
 		
@@ -83,7 +91,12 @@ int main()
 			continue;
 		
 		if(commands[0].name == "exit")
+		{
+			tempFile.close();
+			std::remove("./code/currentSession.txt");
 			break;
+		}
+			
 		
 		if(commands[0].name == "cd")
 		{
@@ -135,7 +148,15 @@ int main()
 					close(pipes[j][1]);
 				}
 				
-				execvp(command.name.data(), arguments);
+
+				if(commands[0].name == "favs")
+				{
+					execv("./code/favs", arguments);
+				} else{	
+					tempFile << commands[0].name << endl;
+					execvp(command.name.data(), arguments);
+				}
+
 				
 				cout << "Wrong command" << '\n';
 				
