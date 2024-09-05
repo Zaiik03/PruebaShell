@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <limits.h>
+#include <algorithm>
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -78,9 +79,31 @@ vector<Command> getNextCommands()
 	return commands;
 }
 
+string trim(const string& str) {
+    size_t first = str.find_first_not_of(' ');
+    size_t last = str.find_last_not_of(' ');
+    return (first == string::npos || last == string::npos) ? "" : str.substr(first, last - first + 1);
+}
+
+void saveCurrentCommand(string command, vector<string>& usedCommands, int& commandNumber, ofstream& tempFile){
+	command = trim(command);
+	if (find(usedCommands.begin(), usedCommands.end(), command) == usedCommands.end())
+	{
+        usedCommands.push_back(command);  
+		if(tempFile.is_open())
+		{
+			tempFile << commandNumber++ << ". " << command << endl;
+		} else{
+			cout << "Error escribiendo en el archivo temporal" << "\n";
+		}
+    }
+}
+
 int main()
 {
-	std::ofstream tempFile("./code/currentSession.txt");
+	ofstream tempFile("./code/currentSession.txt");
+	vector<string> usedCommands;
+	int commandNumber = 1;
 	while(true)
 	{
 		cout << CYAN << "user$ " << RESET;
@@ -93,7 +116,7 @@ int main()
 		if(commands[0].name == "exit")
 		{
 			tempFile.close();
-			std::remove("./code/currentSession.txt");
+			remove("./code/currentSession.txt");
 			break;
 		}
 			
@@ -146,21 +169,24 @@ int main()
 				{
 					close(pipes[j][0]);
 					close(pipes[j][1]);
-				}
+				}	
 				
-
 				if(commands[0].name == "favs")
 				{
 					execv("./code/favs", arguments);
 				} else{	
-					tempFile << commands[0].name << endl;
 					execvp(command.name.data(), arguments);
 				}
 
-				
 				cout << "Wrong command" << '\n';
 				
 				break;
+			} else{
+
+				if(commands[0].name != "favs")
+				{
+					saveCurrentCommand(commands[0].name, usedCommands, commandNumber, tempFile);
+				}
 			}
 		}
 		

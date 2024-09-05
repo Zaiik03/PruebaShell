@@ -1,0 +1,4 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/pyrr/Escritorio/SistemasOperativos/code'
+g++ -std=c++20 -o ../exec/run ./shell.cpp
+make: Leaving directory '/home/pyrr/Escritorio/SistemasOperativos/code'
