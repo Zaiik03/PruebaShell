@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <limits.h>
 #include <unistd.h>
+#include <sstream>
+#include <sys/wait.h>
 
 void createFile(std::string ruta){
     std::ofstream file(ruta);
@@ -48,18 +50,30 @@ void showSessionCommands(){
     }
 }
 
-void showFavCommands(std::string ruta){
+bool isFavsEmpty(std::string ruta){
     std::ifstream fav(ruta);
-    std::string command;
 
     fav.seekg(0, std::ios::end);
     if(fav.tellg() == 0)
     {
-        std::cout << "El archivo de comandos favoritos está vacío" << "\n";
+        fav.seekg(0, std::ios::beg);
+        return true;
+    }
+    return false;
+}
+
+void showFavCommands(std::string ruta){
+    bool isEmpty = isFavsEmpty(ruta);
+
+    if(isEmpty)
+    {
+        std::cout << "No hay comandos favoritos agregados para mostrar" << "\n";
         return;
     }
 
-    fav.seekg(0, std::ios::beg);
+    std::ifstream fav(ruta);
+    
+    std::string command;
     std::cout << "Comandos favoritos: " << "\n";
     if(fav.is_open())
     {
@@ -71,11 +85,84 @@ void showFavCommands(std::string ruta){
 }
 
 void deleteCommands(std::string ruta){
+    bool isEmpty = isFavsEmpty(ruta);
+
+    if(isEmpty)
+    {
+        std::cout << "No hay comandos favoritos para borrar" << "\n";
+        return;
+    }
+
     std::ofstream favs(ruta, std::ios::trunc);
     if(favs.is_open())
     {
         std::cout << "Comandos favoritos eliminados" << "\n";
     }
+
+}
+
+void deleteNumCommands(std::string commandsIndex){
+    std::vector<int> numbers; 
+    std::string token;
+
+    for(char c : commandsIndex)
+    {
+        if(c == ',')
+        {
+            if(!token.empty())
+            {
+                try{
+                    numbers.push_back(std::stoi(token));
+                } catch(std::invalid_argument& e){
+                    std::cout << "Error: " << token << "no es un número" << "\n";
+                    return;
+                }
+                token.clear();
+            }
+
+        } else{
+            token.push_back(c);
+        }
+    }
+
+    if(!token.empty())
+    {
+        try{
+            numbers.push_back(std::stoi(token));
+        } catch(std::invalid_argument& e){
+            std::cout << "Error: " << token << "no es un número" << "\n";
+            return;
+        }
+    }
+
+    std::ifstream fav("./code/currentSession.txt");
+    std::vector<std::string> favCommands;
+    std::string line;
+
+    while(std::getline(fav, line))
+    {
+        favCommands.push_back(line);
+    }
+    fav.close();
+
+    std::vector<std::string> updatedFavCommands;
+    for(int i = 0;i < favCommands.size();i++)
+    {
+        if(std::find(numbers.begin(), numbers.end(), i+1) == numbers.end())
+        {
+            updatedFavCommands.push_back(favCommands[i]);
+        }
+    }
+
+    std::ofstream newFav("./code/currentSession.txt");
+    for (int i = 0; i < updatedFavCommands.size(); i++) {
+        newFav << (i + 1) << ". " << updatedFavCommands[i].substr(updatedFavCommands[i].find(' ') + 1) << std::endl;
+    }
+
+    newFav.close();
+    
+    std::cout << "Comandos eliminados correctamente." << std::endl;
+    
 }
 
 std::string extractCommand(std::string line){
@@ -138,6 +225,59 @@ void saveSessionCommands(std::string& ruta){
 
 }
 
+void searchSubString(std::string substr){
+    std::ifstream fav("./code/currentSession.txt");
+    std::vector<std::string> favCommands;
+    std::string line;
+
+    while(std::getline(fav, line))
+    {
+        favCommands.push_back(line);
+    }
+    fav.close();
+
+    for(int i = 0;i < favCommands.size();i++)
+    {
+        if(favCommands[i].find(substr) != std::string::npos)
+        {
+            std::cout << favCommands[i] << "\n";
+        }
+    }
+
+}
+
+void execCommand(std::string numCommandA){
+    std::ifstream fav("./code/currentSession.txt");
+    std::string line;
+    std::string numCommandB;
+    std::string command;
+
+    while(std::getline(fav, line))
+    {
+        size_t dotPos = line.find('.');
+        if(dotPos != std::string::npos)
+        {
+            numCommandB = line.substr(0, dotPos);
+           
+        }
+
+        if(numCommandA == numCommandB)
+        {
+            command = extractCommand(line);
+
+            char* args[] = {const_cast<char*>(command.c_str()), NULL};
+            if(fork() == 0)
+            {
+                execvp(command.c_str(), args);
+                std::cout << "Error al ejecutar el comando" << "\n";
+            } else{
+                wait(NULL);
+            }
+        }
+  
+    }
+}
+
 int main(int argc, char *argv[]){
     if(argc < 2)
     {
@@ -169,12 +309,9 @@ int main(int argc, char *argv[]){
 
     if(strcmp(argv[1], "mostrar") == 0)
     {
-        if(!ruta.empty())
-        {
-            showSessionCommands();
-        } else{
-            std::cout << "No hay comandos de sesión actual" << "\n";
-        }
+        
+        showSessionCommands();
+        
     }
 
     if(strcmp(argv[1], "cargar") == 0)
@@ -197,6 +334,55 @@ int main(int argc, char *argv[]){
             std::cout << "No hay comandos favoritos para borrar" << "\n";
         }
     }
+
+    if(strcmp(argv[1], "eliminar") == 0)
+    {
+        if(!ruta.empty())
+        {
+
+            if(argv[3] != NULL)
+            {
+                std::cout << "El formato correcto es 'num1,num2...'" << "\n";
+            } else{
+
+                if(argv[2] != NULL)
+                {
+                    deleteNumCommands(argv[2]);
+                } else{
+                    std::cout << "Debe especificar índices de comandos favoritos a eliminar" << "\n";
+                }
+
+            }
+    
+        } else{
+            std::cout << "No hay comandos favoritos para borrar" << "\n";
+        }
+        
+    }
+
+    if(strcmp(argv[1], "buscar") == 0)
+    {
+
+        if(argv[2] != NULL)
+        {
+            searchSubString(argv[2]);
+        } else{
+            std::cout << "Debe especificar una cadena para buscar" << "\n";
+        }
+
+    }
+
+    if(strcmp(argv[2], "ejecutar") == 0)
+    {
+        if(argv[1] != NULL)
+        {
+            execCommand(argv[1]);
+        } else{
+            std::cout << "Debe especificar el número del comando a ejecutar" << "\n";
+        }
+    }
+
+
 
     return 0;
 }

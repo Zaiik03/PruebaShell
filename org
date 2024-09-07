@@ -27,3 +27,12 @@
 
 * Ahora mismo hay un error con el comando exit. Pasa cuando se ingresa un comando que no existe. Hay que escribir
   exit n + 1 veces, donde n es la cantidad de comandos ingresados que no existen
+
+* Falta:
+	** favs eliminar num1,num2... -> LISTO, falta verificar errores:
+		*** Asumire el formato num1,num2,num3. Mandar mensaje de error si num1, num2, num3  -> LISTO
+	** favs buscar cmd -> LISTO
+	** favs num ejecutar -> LISTO
+
+* Evaluar si las operaciones se deberian hacer a los comandos de shell actual o a los comandos del archivo de 
+  favoritos
