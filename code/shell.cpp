@@ -94,7 +94,13 @@ void set(char* arguments[]) {
         std::cout << "Argumento incorrecto" << std::endl;
         return;
     }
-    
+	
+    if(arguments[2]== NULL){
+		std::cout << "Argumento incorrecto" << std::endl;
+        return;
+
+	}
+
     if (arguments[3]==NULL){
         std::cout << "Argumento incorrecto" << std::endl;
         return;
@@ -111,7 +117,7 @@ void set(char* arguments[]) {
 
 	signal(SIGALRM, signal_alarma); 
     alarm(segundos); 
-	//pause();
+	pause();
 
     string mensaje;
     for (int i = 3; arguments[i] != NULL; i++) {
