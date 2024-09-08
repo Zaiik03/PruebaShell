@@ -1,0 +1,4 @@
+ls
+mkdir auxDir
+head /proc/cpuinfo | tr a-z A-Z
+ps -aux | sort -nr -k 4 | head -20

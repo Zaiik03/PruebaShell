@@ -1,19 +1,23 @@
+#include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <set>
 #include <string>
 #include <vector>
-#include <fstream>
+
 #include <limits.h>
-#include <algorithm>
-#include <cstdlib>
+#include <stdlib.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #define NULLPTR (nullptr)
-#define RESET "\033[0m"
-#define RED "\033[31m"
-#define CYAN "\033[36m"
-#define MAGENTA "\033[35m"
+
+#define COLOR_RED "\e[1;31m"
+#define COLOR_CYN "\e[1;36m"
+#define COLOR_PRP "\e[1;35m"
+
+#define COLOR_NONE "\e[0m"
 
 using namespace std;
 
@@ -93,43 +97,50 @@ string trim(const string& str)
 	return (first == string::npos || last == string::npos) ? "" : str.substr(first, last - first + 1);
 }
 
-void saveCurrentCommand(string command, vector<string>& usedCommands, int& commandNumber, ofstream& tempFile)
+void saveCurrentCommand(string command, set<string>& seenCommands, ofstream& tempFile)
 {
 	command = trim(command);
 	
-	if(find(usedCommands.begin(), usedCommands.end(), command) == usedCommands.end())
+	if(!seenCommands.contains(command))
 	{
-		usedCommands.push_back(command);
+		seenCommands.insert(command);
 		
 		if(tempFile.is_open())
-			tempFile << commandNumber++ << ". " << command << endl;
+		{
+			tempFile << seenCommands.size() << ". " << command << '\n';
+			
+			tempFile.flush();
+		}
 		
 		else
-			cout << RED << "Error escribiendo en el archivo temporal" << RESET << "\n";
+			cout << COLOR_RED << "Error while writing in the temporal file." << COLOR_NONE << '\n';
 	}
 }
 
 char* getFavsAbsPath()
 {
 	static char result[1024];
-	realpath("./code/favs", result);
+	
+	realpath("./exec/favs", result);
+	
 	return result;
 }
 
 int main()
 {
+	set<string> seenCommands;
+	
 	ofstream tempFile("/tmp/currentSession.txt");
-	vector<string> usedCommands;
-	int commandNumber = 1;
-
+	
 	char* favsAbsPath = getFavsAbsPath();
-	char cwd[1024];
+	
+	char directory[1024];
+	
+	getcwd(directory, sizeof(directory));
 	
 	while(true)
 	{
-		getcwd(cwd, sizeof(cwd));
-		
-		cout << CYAN << cwd << "$ " << RESET;
+		cout << COLOR_CYN << "[" << directory << "]" << COLOR_NONE << ": ";
 		
 		vector<Command> commands = scanNextCommands();
 		
@@ -142,13 +153,13 @@ int main()
 			
 			remove("/tmp/currentSession.txt");
 			
-			break;
+			return 0;
 		}
 		
 		if(commands[0].name == "cd")
 		{
 			if(commands[0].arguments.size() != 1)
-				cout << RED << "Wrong number of arguments" << RESET << '\n';
+				cout << COLOR_RED << "Wrong number of arguments" << COLOR_NONE << '\n';
 			
 			else
 				chdir(commands[0].arguments[0].data());
@@ -201,17 +212,14 @@ int main()
 				else
 					execvp(command.name.data(), arguments);
 				
-				cout << RED << "Wrong command" << RESET << '\n';
+				cout << COLOR_RED << "Wrong command" << COLOR_NONE << '\n';
 				
 				return 0;
 			}
-			
-			else
-			{
-				if(commands[0].name != "favs")
-					saveCurrentCommand(commands[0].name, usedCommands, commandNumber, tempFile);
-			}
 		}
+		
+		if(commands[0].name != "favs")
+			saveCurrentCommand(commands[0].name, seenCommands, tempFile);
 		
 		for(int i = 0; i < pipeCount; i++)
 		{
