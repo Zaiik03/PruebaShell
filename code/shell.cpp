@@ -9,13 +9,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-
 #define NULLPTR (nullptr)
 #define RESET "\033[0m"
 #define RED "\033[31m"
 #define CYAN "\033[36m"
 #define MAGENTA "\033[35m"
-
 
 using namespace std;
 
@@ -26,82 +24,93 @@ struct Command
 	vector<string> arguments;
 };
 
-vector<Command> getNextCommands()
+pair<string, char> scanToken()
 {
-	vector<Command> commands;
+	string token;
 	
 	char c;
 	
-	string token;
-	Command command;
-	
-	while((c = getchar()) != '\n')
+	while(true)
 	{
-		switch(c)
-		{
-			case ' ':
-			{
-				if(token.empty())
-					continue;
-				
-				if(command.name.empty())
-					command.name = token;
-				
-				else
-					command.arguments.push_back(token);
-				
-				token = "";
-			} break;
-			
-			case '|':
-			{
-				commands.push_back(command);
-				
-				command = Command();
-			} break;
-			
-			default:
-			{
-				token.push_back(c);
-			} break;
-		}
+		c = getchar();
+		
+		if(c != ' ')
+			break;
 	}
 	
-	if(!token.empty())
+	while((c != ' ') && (c != '\n'))
 	{
-		if(command.name.empty())
-			command.name = token;
+		token.push_back(c);
+		
+		c = getchar();
+	}
+	
+	return {token, c};
+}
+
+vector<Command> scanNextCommands()
+{
+	vector<Command> commands;
+	
+	Command command;
+	
+	while(true)
+	{
+		const auto& [token, separator] = scanToken();
+		
+		if(token == "|")
+		{
+			commands.push_back(command);
+			
+			command = Command();
+		}
 		
 		else
-			command.arguments.push_back(token);
+		{
+			if(command.name.empty())
+				command.name = token;
+			
+			else
+				command.arguments.push_back(token);
+		}
 		
-		commands.push_back(command);
+		if(separator == '\n')
+		{
+			commands.push_back(command);
+			
+			break;
+		}
 	}
 	
 	return commands;
 }
 
-string trim(const string& str) {
-    size_t first = str.find_first_not_of(' ');
-    size_t last = str.find_last_not_of(' ');
-    return (first == string::npos || last == string::npos) ? "" : str.substr(first, last - first + 1);
+string trim(const string& str)
+{
+	size_t first = str.find_first_not_of(' ');
+	size_t last = str.find_last_not_of(' ');
+	
+	return (first == string::npos || last == string::npos) ? "" : str.substr(first, last - first + 1);
 }
 
-void saveCurrentCommand(string command, vector<string>& usedCommands, int& commandNumber, ofstream& tempFile){
+void saveCurrentCommand(string command, vector<string>& usedCommands, int& commandNumber, ofstream& tempFile)
+{
 	command = trim(command);
-	if (find(usedCommands.begin(), usedCommands.end(), command) == usedCommands.end())
+	
+	if(find(usedCommands.begin(), usedCommands.end(), command) == usedCommands.end())
 	{
-        usedCommands.push_back(command);  
+		usedCommands.push_back(command);
+		
 		if(tempFile.is_open())
-		{
 			tempFile << commandNumber++ << ". " << command << endl;
-		} else{
+		
+		else
 			cout << RED << "Error escribiendo en el archivo temporal" << RESET << "\n";
-		}
-    }
+	}
 }
 
-char* getFavsAbsPath(){
+char* getFavsAbsPath()
+{
 	static char result[1024];
 	realpath("./code/favs", result);
 	return result;
@@ -115,23 +124,26 @@ int main()
 
 	char* favsAbsPath = getFavsAbsPath();
 	char cwd[1024];
+	
 	while(true)
 	{
 		getcwd(cwd, sizeof(cwd));
+		
 		cout << CYAN << cwd << "$ " << RESET;
 		
-		vector<Command> commands = getNextCommands();
+		vector<Command> commands = scanNextCommands();
 		
-		if(commands.size() == 0)
+		if(commands.empty())
 			continue;
 		
 		if(commands[0].name == "exit")
 		{
 			tempFile.close();
+			
 			remove("/tmp/currentSession.txt");
+			
 			break;
 		}
-			
 		
 		if(commands[0].name == "cd")
 		{
@@ -148,15 +160,15 @@ int main()
 		
 		int pipes[pipeCount][2];
 		
-		if(pipeCount > 0)
-		{
-			for(int i = 0; i < pipeCount; i++)
-				pipe(pipes[i]);
-		}
+		for(int i = 0; i < pipeCount; i++)
+			pipe(pipes[i]);
 		
 		for(int i = 0; i < commands.size(); i++)
 		{
 			Command& command = commands[i];
+			
+			if(command.name.empty())
+				break;
 			
 			if(fork() == 0)
 			{
@@ -181,24 +193,23 @@ int main()
 				{
 					close(pipes[j][0]);
 					close(pipes[j][1]);
-				}	
+				}
 				
 				if(commands[0].name == "favs")
-				{
 					execv(favsAbsPath, arguments);
-				} else{	
+				
+				else
 					execvp(command.name.data(), arguments);
-				}
-
-				cout << RED <<"Wrong command" << RESET << '\n';
+				
+				cout << RED << "Wrong command" << RESET << '\n';
 				
 				break;
-			} else{
-
+			}
+			
+			else
+			{
 				if(commands[0].name != "favs")
-				{
 					saveCurrentCommand(commands[0].name, usedCommands, commandNumber, tempFile);
-				}
 			}
 		}
 		
