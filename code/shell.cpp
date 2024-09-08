@@ -2,6 +2,10 @@
 #include <string>
 #include <vector>
 
+#include <csignal>
+#include <unistd.h>
+#include <cstring>
+
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -71,8 +75,62 @@ vector<Command> getNextCommands()
 	return commands;
 }
 
+
+void signal_alarma(int seconds){
+	
+
+}
+void set(char* arguments[]) {
+    // Verificación de argumentos
+    for (int i = 0; i < 4; i++) {
+        if (arguments[i] == NULL) {
+            std::cout << "Se necesitan más argumentos" << std::endl;
+            break;  // Salir de la función
+        }
+    }
+
+    // Comparación de cadenas utilizando strcmp
+    if (strcmp(arguments[1], "recordatorio")) {
+        std::cout << "Argumento incorrecto" << std::endl;
+        return;
+    }
+    
+    if (arguments[3]==NULL){
+        std::cout << "Argumento incorrecto" << std::endl;
+        return;
+
+    }
+
+    int segundos;
+    try {
+        segundos = stoi(arguments[2]);
+    } catch (...) {
+        std::cout << "Tiempo inválido." << std::endl;
+        return;
+    }
+
+	signal(SIGALRM, signal_alarma); 
+    alarm(segundos); 
+	//pause();
+
+    string mensaje;
+    for (int i = 3; arguments[i] != NULL; i++) {
+        mensaje += arguments[i];
+        if (arguments[i + 1] != NULL) {
+            mensaje += " "; 
+        }
+    }
+	std::cout << mensaje <<std::endl;
+        
+    
+}
+
+
 int main()
 {
+	
+
+
 	while(true)
 	{
 		cout << "user$ ";
@@ -134,12 +192,18 @@ int main()
 					close(pipes[j][0]);
 					close(pipes[j][1]);
 				}
+				if(commands[0].name =="set"){
+					set(arguments);
+					exit(0);
+				}
 				
 				execvp(command.name.data(), arguments);
 				
 				cout << "Wrong command" << '\n';
 				
 				break;
+
+				
 			}
 		}
 		
@@ -151,4 +215,5 @@ int main()
 		
 		while(wait(NULLPTR) > 0);
 	}
+	
 }
