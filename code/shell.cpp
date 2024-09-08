@@ -4,9 +4,11 @@
 #include <fstream>
 #include <limits.h>
 #include <algorithm>
+#include <cstdlib>
 
 #include <sys/types.h>
 #include <sys/wait.h>
+
 
 #define NULLPTR (nullptr)
 #define RESET "\033[0m"
@@ -99,11 +101,20 @@ void saveCurrentCommand(string command, vector<string>& usedCommands, int& comma
     }
 }
 
+char* getFavsAbsPath(){
+	static char result[1024];
+	realpath("./code/favs", result);
+	return result;
+}
+
 int main()
 {
-	ofstream tempFile("./code/currentSession.txt");
+	ofstream tempFile("/tmp/currentSession.txt");
 	vector<string> usedCommands;
 	int commandNumber = 1;
+
+	char* favsAbsPath = getFavsAbsPath();
+
 	while(true)
 	{
 		cout << CYAN << "user$ " << RESET;
@@ -116,7 +127,7 @@ int main()
 		if(commands[0].name == "exit")
 		{
 			tempFile.close();
-			remove("./code/currentSession.txt");
+			remove("/tmp/currentSession.txt");
 			break;
 		}
 			
@@ -173,7 +184,7 @@ int main()
 				
 				if(commands[0].name == "favs")
 				{
-					execv("./code/favs", arguments);
+					execv(favsAbsPath, arguments);
 				} else{	
 					execvp(command.name.data(), arguments);
 				}

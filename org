@@ -36,3 +36,8 @@
 
 * Evaluar si las operaciones se deberian hacer a los comandos de shell actual o a los comandos del archivo de 
   favoritos
+
+
+* Arreglar rutas relativas para que favs funcione en cualquier carpeta
+
+TODO ARREGLADO Y AHORA MISMO TODO FUNCIONA CORRECTAMENTE CON FAVS

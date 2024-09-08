@@ -7,17 +7,30 @@
 #include <unistd.h>
 #include <sstream>
 #include <sys/wait.h>
+#include <cstdlib>
+
+
+
+char* getFavsAbsPath(std::string ruta){
+	static char result[1024];
+	realpath(ruta.c_str(), result);
+	return result;
+}
 
 void createFile(std::string ruta){
+    
+    ruta = getFavsAbsPath(ruta);
     std::ofstream file(ruta);
-    std::ofstream config("./code/config.txt");
+    std::ofstream config("/tmp/config.txt");
     if(config.is_open())
     {
         config << ruta;
         config.close();
     }
-    std::cout << "Arhivo creado exitosamente" << "\n";
-    
+    std::cout << "Arhivo creado exitosamente en "<< ruta << "\n";
+
+    file.close();
+    config.close();
 }
 
 std::string trim(const std::string& str) {
@@ -27,7 +40,7 @@ std::string trim(const std::string& str) {
 }
 
 std::string readConfig(){
-    std::ifstream config("./code/config.txt");
+    std::ifstream config("/tmp/config.txt");
     std::string ruta;
     if(config.is_open())
     {
@@ -38,7 +51,7 @@ std::string readConfig(){
 }
 
 void showSessionCommands(){
-    std::ifstream tempFile("./code/currentSession.txt");
+    std::ifstream tempFile("/tmp/currentSession.txt");
     std::string command;
     std::cout << "Comandos usados en la sesión actual: " << "\n";
     if(tempFile.is_open())
@@ -48,6 +61,8 @@ void showSessionCommands(){
             std::cout << command << "\n";
         }
     }
+
+    tempFile.close();
 }
 
 bool isFavsEmpty(std::string ruta){
@@ -57,8 +72,10 @@ bool isFavsEmpty(std::string ruta){
     if(fav.tellg() == 0)
     {
         fav.seekg(0, std::ios::beg);
+        fav.close();
         return true;
     }
+    fav.close();
     return false;
 }
 
@@ -82,6 +99,8 @@ void showFavCommands(std::string ruta){
             std::cout << command << "\n";
         }
     }
+
+    fav.close();
 }
 
 void deleteCommands(std::string ruta){
@@ -99,6 +118,7 @@ void deleteCommands(std::string ruta){
         std::cout << "Comandos favoritos eliminados" << "\n";
     }
 
+    favs.close();
 }
 
 void deleteNumCommands(std::string commandsIndex){
@@ -135,7 +155,7 @@ void deleteNumCommands(std::string commandsIndex){
         }
     }
 
-    std::ifstream fav("./code/currentSession.txt");
+    std::ifstream fav("/tmp/currentSession.txt");
     std::vector<std::string> favCommands;
     std::string line;
 
@@ -154,7 +174,7 @@ void deleteNumCommands(std::string commandsIndex){
         }
     }
 
-    std::ofstream newFav("./code/currentSession.txt");
+    std::ofstream newFav("/tmp/currentSession.txt");
     for (int i = 0; i < updatedFavCommands.size(); i++) {
         newFav << (i + 1) << ". " << updatedFavCommands[i].substr(updatedFavCommands[i].find(' ') + 1) << std::endl;
     }
@@ -177,7 +197,7 @@ std::string extractCommand(std::string line){
 void saveSessionCommands(std::string& ruta){
     std::cout << "Guardando archivo" << "\n";
     std::ofstream file(ruta, std::ios::app);
-    std::ifstream tempFile("./code/currentSession.txt");
+    std::ifstream tempFile("/tmp/currentSession.txt");
     std::vector<std::string> currentFavCommands;
     std::vector<std::string> newFavCommands;
     std::string line;
@@ -223,10 +243,13 @@ void saveSessionCommands(std::string& ruta){
         std::cout << "Error al abrir el archivo para guardar" << "\n";
     }
 
+
+    file.close();
+    tempFile.close();
 }
 
 void searchSubString(std::string substr){
-    std::ifstream fav("./code/currentSession.txt");
+    std::ifstream fav("/tmp/currentSession.txt");
     std::vector<std::string> favCommands;
     std::string line;
 
@@ -244,10 +267,12 @@ void searchSubString(std::string substr){
         }
     }
 
+    fav.close();
+
 }
 
 void execCommand(std::string numCommandA){
-    std::ifstream fav("./code/currentSession.txt");
+    std::ifstream fav("/tmp/currentSession.txt");
     std::string line;
     std::string numCommandB;
     std::string command;
@@ -261,21 +286,33 @@ void execCommand(std::string numCommandA){
            
         }
 
+
         if(numCommandA == numCommandB)
         {
             command = extractCommand(line);
 
             char* args[] = {const_cast<char*>(command.c_str()), NULL};
-            if(fork() == 0)
+            pid_t pid = fork();
+            if(pid == 0)
             {
                 execvp(command.c_str(), args);
                 std::cout << "Error al ejecutar el comando" << "\n";
             } else{
-                wait(NULL);
+                waitpid(pid, NULL, 0);
             }
-        }
+        }    
   
     }
+    
+
+    fav.close();
+}
+
+void resetFavs(std::string ruta){
+    remove("/tmp/config.txt");
+    remove(ruta.c_str());
+    std::cout << "Favs reiniciado correctamente" << "\n";
+    std::cout << "Se borró su archivo de comandos favoritos" << "\n";
 }
 
 int main(int argc, char *argv[]){
@@ -284,6 +321,7 @@ int main(int argc, char *argv[]){
         std::cout << "Debe especificar un comando" << "\n";
         return 1;
     }
+
     std::string ruta = readConfig(); 
 
     if(strcmp(argv[1], "crear") == 0)
@@ -315,7 +353,7 @@ int main(int argc, char *argv[]){
     }
 
     if(strcmp(argv[1], "cargar") == 0)
-    {
+    {   
         if(!ruta.empty())
         {
             showFavCommands(ruta);
@@ -371,7 +409,18 @@ int main(int argc, char *argv[]){
         }
 
     }
+    if(strcmp(argv[1], "reiniciar") == 0)
+    {
+        std::cout << "holaaa" << "\n";
+        if(!ruta.empty())
+        {
+            resetFavs(ruta);
+        }
+        
+    }
+    
 
+    
     if(strcmp(argv[2], "ejecutar") == 0)
     {
         if(argv[1] != NULL)
