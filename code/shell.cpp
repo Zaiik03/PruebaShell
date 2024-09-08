@@ -96,7 +96,7 @@ void saveCurrentCommand(string command, vector<string>& usedCommands, int& comma
 		{
 			tempFile << commandNumber++ << ". " << command << endl;
 		} else{
-			cout << "Error escribiendo en el archivo temporal" << "\n";
+			cout << RED << "Error escribiendo en el archivo temporal" << RESET << "\n";
 		}
     }
 }
@@ -114,10 +114,11 @@ int main()
 	int commandNumber = 1;
 
 	char* favsAbsPath = getFavsAbsPath();
-
+	char cwd[1024];
 	while(true)
 	{
-		cout << CYAN << "user$ " << RESET;
+		getcwd(cwd, sizeof(cwd));
+		cout << CYAN << cwd << "$ " << RESET;
 		
 		vector<Command> commands = getNextCommands();
 		
@@ -135,7 +136,7 @@ int main()
 		if(commands[0].name == "cd")
 		{
 			if(commands[0].arguments.size() != 1)
-				cout << "Wrong number of arguments" << '\n';
+				cout << RED << "Wrong number of arguments" << RESET << '\n';
 			
 			else
 				chdir(commands[0].arguments[0].data());
@@ -189,7 +190,7 @@ int main()
 					execvp(command.name.data(), arguments);
 				}
 
-				cout << "Wrong command" << '\n';
+				cout << RED <<"Wrong command" << RESET << '\n';
 				
 				break;
 			} else{

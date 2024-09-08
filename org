@@ -41,3 +41,8 @@
 * Arreglar rutas relativas para que favs funcione en cualquier carpeta
 
 TODO ARREGLADO Y AHORA MISMO TODO FUNCIONA CORRECTAMENTE CON FAVS
+
+* Algunos detalles esteticos:
+	** Agregar colores a los mensajes -> LISTO
+	** Imprimir ruta actual absoluta en el prompt -> LISTO
+	** Evaluar con los demas si operar sobre comandos de sesion actual o comandos de archivo de favoritos
