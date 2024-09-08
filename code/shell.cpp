@@ -92,11 +92,8 @@ int main()
 		
 		int pipes[pipeCount][2];
 		
-		if(pipeCount > 0)
-		{
-			for(int i = 0; i < pipeCount; i++)
-				pipe(pipes[i]);
-		}
+		for(int i = 0; i < pipeCount; i++)
+			pipe(pipes[i]);
 		
 		for(int i = 0; i < commands.size(); i++)
 		{
@@ -138,7 +135,7 @@ int main()
 				if(i < pipeCount)
 					dup2(pipes[i][1], STDOUT_FILENO);
 				
-				for(int j = 0; j < commands.size(); j++)
+				for(int j = 0; j < pipeCount; j++)
 				{
 					close(pipes[j][0]);
 					close(pipes[j][1]);
@@ -148,11 +145,11 @@ int main()
 				
 				cout << "Wrong command" << '\n';
 				
-				break;
+				return 0;
 			}
 		}
 		
-		for(int i = 0; i < commands.size(); i++)
+		for(int i = 0; i < pipeCount; i++)
 		{
 			close(pipes[i][0]);
 			close(pipes[i][1]);
