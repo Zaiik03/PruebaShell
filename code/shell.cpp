@@ -203,7 +203,7 @@ int main()
 				
 				cout << RED << "Wrong command" << RESET << '\n';
 				
-				break;
+				return 0;
 			}
 			
 			else
