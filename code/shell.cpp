@@ -16,56 +16,62 @@ struct Command
 	vector<string> arguments;
 };
 
-vector<Command> getNextCommands()
+pair<string, char> scanToken()
 {
-	vector<Command> commands;
+	string token;
 	
 	char c;
 	
-	string token;
-	Command command;
-	
-	while((c = getchar()) != '\n')
+	while(true)
 	{
-		switch(c)
-		{
-			case ' ':
-			{
-				if(token.empty())
-					continue;
-				
-				if(command.name.empty())
-					command.name = token;
-				
-				else
-					command.arguments.push_back(token);
-				
-				token = "";
-			} break;
-			
-			case '|':
-			{
-				commands.push_back(command);
-				
-				command = Command();
-			} break;
-			
-			default:
-			{
-				token.push_back(c);
-			} break;
-		}
+		c = getchar();
+		
+		if(c != ' ')
+			break;
 	}
 	
-	if(!token.empty())
+	while((c != ' ') && (c != '\n'))
 	{
-		if(command.name.empty())
-			command.name = token;
+		token.push_back(c);
+		
+		c = getchar();
+	}
+	
+	return {token, c};
+}
+
+vector<Command> scanNextCommands()
+{
+	vector<Command> commands;
+	
+	Command command;
+	
+	while(true)
+	{
+		const auto& [token, separator] = scanToken();
+		
+		if(token == "|")
+		{
+			commands.push_back(command);
+			
+			command = Command();
+		}
 		
 		else
-			command.arguments.push_back(token);
+		{
+			if(command.name.empty())
+				command.name = token;
+			
+			else
+				command.arguments.push_back(token);
+		}
 		
-		commands.push_back(command);
+		if(separator == '\n')
+		{
+			commands.push_back(command);
+			
+			break;
+		}
 	}
 	
 	return commands;
@@ -77,24 +83,10 @@ int main()
 	{
 		cout << "user$ ";
 		
-		vector<Command> commands = getNextCommands();
+		vector<Command> commands = scanNextCommands();
 		
-		if(commands.size() == 0)
+		if(commands.empty())
 			continue;
-		
-		if(commands[0].name == "exit")
-			break;
-		
-		if(commands[0].name == "cd")
-		{
-			if(commands[0].arguments.size() != 1)
-				cout << "Wrong number of arguments" << '\n';
-			
-			else
-				chdir(commands[0].arguments[0].data());
-			
-			continue;
-		}
 		
 		int pipeCount = commands.size() - 1;
 		
@@ -109,6 +101,23 @@ int main()
 		for(int i = 0; i < commands.size(); i++)
 		{
 			Command& command = commands[i];
+			
+			if(command.name.empty())
+				break;
+			
+			if(command.name == "exit")
+				return 0;
+			
+			if(command.name == "cd")
+			{
+				if(command.arguments.size() != 1)
+					cout << "Wrong number of arguments" << '\n';
+				
+				else
+					chdir(command.arguments[0].data());
+				
+				continue;
+			}
 			
 			if(fork() == 0)
 			{
@@ -129,7 +138,7 @@ int main()
 				if(i < pipeCount)
 					dup2(pipes[i][1], STDOUT_FILENO);
 				
-				for(int j = 0; j < pipeCount; j++)
+				for(int j = 0; j < commands.size(); j++)
 				{
 					close(pipes[j][0]);
 					close(pipes[j][1]);
@@ -143,7 +152,7 @@ int main()
 			}
 		}
 		
-		for(int i = 0; i < pipeCount; i++)
+		for(int i = 0; i < commands.size(); i++)
 		{
 			close(pipes[i][0]);
 			close(pipes[i][1]);
