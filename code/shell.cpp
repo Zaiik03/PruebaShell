@@ -7,6 +7,12 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <csignal>
+#include <unistd.h>
+#include <cstring>
+
+
+
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -126,6 +132,79 @@ char* getFavsAbsPath()
 	return result;
 }
 
+void signal_alarma(int seconds){
+
+
+
+
+}
+void setAlarm(char* arguments[]) {
+    // Verificación de argumentos
+    for (int i = 0; i < 4; i++) {
+        if (arguments[i] == NULL) {
+            std::cout << "Se necesitan más argumentos" << std::endl;
+            break;  // Salir de la función
+        }
+    }
+
+    // Comparación de cadenas utilizando strcmp
+    if (strcmp(arguments[1], "recordatorio")) {
+        std::cout << "Argumento incorrecto" << std::endl;
+        return;
+    }
+
+    if(arguments[2]== NULL){
+        std::cout << "Argumento incorrecto" << std::endl;
+        return;
+
+    }
+
+    if (arguments[3]==NULL){
+        std::cout << "Argumento incorrecto" << std::endl;
+        return;
+
+    }
+
+    int segundos;
+
+    try {
+        segundos = stoi(arguments[2]);
+        } 
+        catch (const std::invalid_argument& e) {
+            std::cout << "Error: '" << arguments[2] << "' no es un número válido." << std::endl;
+        }
+
+    if(segundos <= 0){
+        std::cout << "Numero invalido, numero debe ser mayor que 0" << std::endl;
+        return;
+    }
+
+
+    string mensaje;
+    for (int i = 3; arguments[i] != NULL; i++) {
+        mensaje += arguments[i];
+        if (arguments[i + 1] != NULL) {
+            mensaje += " "; 
+        }
+    }
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        signal(SIGALRM, signal_alarma);
+        alarm(segundos);
+        pause();
+        std::cout <<"\n";
+        fflush(stdout);
+        std::cout << mensaje << std::endl;
+        exit(0);
+    } else if (pid < 0) {
+        std::cerr << "Error al crear el proceso hijo." << std::endl;
+    }
+
+
+}
+
+
 int main()
 {
 	set<string> seenCommands;
@@ -205,6 +284,10 @@ int main()
 					close(pipes[j][0]);
 					close(pipes[j][1]);
 				}
+				if(commands[0].name =="set"){
+					setAlarm(arguments);
+					exit(0);
+				}
 				
 				if(commands[0].name == "favs")
 					execv(favsAbsPath, arguments);
@@ -229,4 +312,5 @@ int main()
 		
 		while(wait(NULLPTR) > 0);
 	}
+	
 }
