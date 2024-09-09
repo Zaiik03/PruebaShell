@@ -78,6 +78,8 @@ vector<Command> getNextCommands()
 
 void signal_alarma(int seconds){
 	
+	
+	
 
 }
 void set(char* arguments[]) {
@@ -94,7 +96,7 @@ void set(char* arguments[]) {
         std::cout << "Argumento incorrecto" << std::endl;
         return;
     }
-	
+
     if(arguments[2]== NULL){
 		std::cout << "Argumento incorrecto" << std::endl;
         return;
@@ -108,17 +110,23 @@ void set(char* arguments[]) {
     }
 
     int segundos;
-    try {
-        segundos = stoi(arguments[2]);
-    } catch (...) {
-        std::cout << "Tiempo inválido." << std::endl;
-        return;
-    }
+	segundos = stoi(arguments[2]);
+	if(segundos <= 0){
+		std::cout << "Numero invalido, numero debe ser mayor que 0" << std::endl;
+		return;
+	}
+    // try {
+    //     segundos = stoi(arguments[2]);
+	// 	if(segundos== 0){
+	// 		std::cout << "Numero invalido, numero debe ser mayor que 0" << std::endl;
+	// 		return;
+	// 	}
+    // } catch (...) {
+    //     std::cout << "Tiempo inválido." << std::endl;
+    //     return;
+    // }
 
-	signal(SIGALRM, signal_alarma); 
-    alarm(segundos); 
-	pause();
-
+	
     string mensaje;
     for (int i = 3; arguments[i] != NULL; i++) {
         mensaje += arguments[i];
@@ -126,8 +134,20 @@ void set(char* arguments[]) {
             mensaje += " "; 
         }
     }
-	std::cout << mensaje <<std::endl;
-        
+	
+	pid_t pid = fork();
+    if (pid == 0) {  
+        signal(SIGALRM, signal_alarma);  
+        alarm(segundos);
+        pause();  
+		std::cout <<"\n";
+		fflush(stdout);
+        std::cout << mensaje << std::endl;  
+        exit(0);  
+    } else if (pid < 0) {
+        std::cerr << "Error al crear el proceso hijo." << std::endl;
+    }
+
     
 }
 
