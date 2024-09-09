@@ -7,6 +7,10 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <csignal>
+#include <unistd.h>
+#include <cstring>
+
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -126,6 +130,79 @@ char* getFavsAbsPath()
 	return result;
 }
 
+void signal_alarma(int seconds){
+
+}
+
+void setAlarm(char* arguments[]) {
+    for (int i = 0; i < 4; i++) {
+        if (arguments[i] == NULL) {
+            std::cout << COLOR_RED <<  "Se necesitan más argumentos" << COLOR_NONE << "\n";
+            break;  
+        }
+    }
+
+    if (strcmp(arguments[1], "recordatorio")) {
+        std::cout << COLOR_RED << "Argumento incorrecto" << COLOR_NONE << "\n";
+        return;
+    }
+
+    if(arguments[2]== NULL){
+        std::cout << COLOR_RED << "Argumento incorrecto" << COLOR_NONE << "\n";
+        return;
+
+    }
+
+    if (arguments[3]==NULL){
+        std::cout << COLOR_RED << "Argumento incorrecto" << COLOR_NONE << "\n";
+        return;
+
+    }
+
+    int segundos;
+
+    try {
+        segundos = stoi(arguments[2]);
+        } 
+        catch (const std::invalid_argument& e) {
+            std::cout << COLOR_RED << "Error: '" << arguments[2] << "' no es un número válido." << COLOR_NONE << "\n";
+        }
+
+    if(segundos <= 0){
+        std::cout << COLOR_RED << "Numero invalido, numero debe ser mayor que 0" << COLOR_NONE << "\n";
+        return;
+    }
+
+
+    string mensaje;
+    for (int i = 3; arguments[i] != NULL; i++) {
+        mensaje += arguments[i];
+        if (arguments[i + 1] != NULL) {
+            mensaje += " "; 
+        }
+    }
+
+
+    pid_t pid = fork();
+    char directory[1024];
+	if (pid == 0) {
+		getcwd(directory, sizeof(directory));
+        signal(SIGALRM, signal_alarma);
+        alarm(segundos);
+        pause();
+        std::cout <<"\n";
+        fflush(stdout);
+        std::cout << COLOR_PRP << mensaje << COLOR_NONE << "\n";
+		std::cout << COLOR_CYN << "[" << directory << "]" <<  COLOR_NONE << ": ";
+        exit(0);
+    } else if (pid < 0) {
+        std::cout << COLOR_RED << "Error al crear el proceso hijo." << COLOR_NONE << "\n";
+    }
+
+
+}
+
+
 int main()
 {
 	set<string> seenCommands;
@@ -136,10 +213,9 @@ int main()
 	
 	char directory[1024];
 	
-	getcwd(directory, sizeof(directory));
-	
 	while(true)
 	{
+		getcwd(directory, sizeof(directory));
 		cout << COLOR_CYN << "[" << directory << "]" << COLOR_NONE << ": ";
 		
 		vector<Command> commands = scanNextCommands();
@@ -205,6 +281,13 @@ int main()
 					close(pipes[j][0]);
 					close(pipes[j][1]);
 				}
+
+				if(commands[0].name == "set")
+				{
+					setAlarm(arguments);
+					
+					exit(0);
+				}
 				
 				if(commands[0].name == "favs")
 					execv(favsAbsPath, arguments);
@@ -229,4 +312,5 @@ int main()
 		
 		while(wait(NULLPTR) > 0);
 	}
+	
 }
