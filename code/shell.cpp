@@ -130,12 +130,14 @@ char* getFavsAbsPath()
 	return result;
 }
 
-void signal_alarma(int seconds){}
+void signal_alarma(int seconds){
+
+}
 
 void setAlarm(char* arguments[]) {
     for (int i = 0; i < 4; i++) {
         if (arguments[i] == NULL) {
-            std::cout << "Se necesitan más argumentos" << std::endl;
+            std::cout << COLOR_RED <<  "Se necesitan más argumentos" << COLOR_NONE << "\n";
             break;  
         }
     }
@@ -182,13 +184,16 @@ void setAlarm(char* arguments[]) {
 
 
     pid_t pid = fork();
-    if (pid == 0) {
+    char directory[1024];
+	if (pid == 0) {
+		getcwd(directory, sizeof(directory));
         signal(SIGALRM, signal_alarma);
         alarm(segundos);
         pause();
         std::cout <<"\n";
         fflush(stdout);
         std::cout << COLOR_PRP << mensaje << COLOR_NONE << "\n";
+		std::cout << COLOR_CYN << "[" << directory << "]" <<  COLOR_NONE << ": ";
         exit(0);
     } else if (pid < 0) {
         std::cout << COLOR_RED << "Error al crear el proceso hijo." << COLOR_NONE << "\n";
@@ -276,8 +281,11 @@ int main()
 					close(pipes[j][0]);
 					close(pipes[j][1]);
 				}
-				if(commands[0].name =="set"){
+
+				if(commands[0].name == "set")
+				{
 					setAlarm(arguments);
+					
 					exit(0);
 				}
 				
