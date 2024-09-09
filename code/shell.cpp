@@ -110,23 +110,20 @@ void set(char* arguments[]) {
     }
 
     int segundos;
-	segundos = stoi(arguments[2]);
+
+	try {
+		segundos = stoi(arguments[2]);
+        } 
+        catch (const std::invalid_argument& e) {
+            std::cout << "Error: '" << arguments[2] << "' no es un número válido." << std::endl;
+        }
+
 	if(segundos <= 0){
 		std::cout << "Numero invalido, numero debe ser mayor que 0" << std::endl;
 		return;
 	}
-    // try {
-    //     segundos = stoi(arguments[2]);
-	// 	if(segundos== 0){
-	// 		std::cout << "Numero invalido, numero debe ser mayor que 0" << std::endl;
-	// 		return;
-	// 	}
-    // } catch (...) {
-    //     std::cout << "Tiempo inválido." << std::endl;
-    //     return;
-    // }
+   
 
-	
     string mensaje;
     for (int i = 3; arguments[i] != NULL; i++) {
         mensaje += arguments[i];
