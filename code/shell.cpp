@@ -137,24 +137,24 @@ void signal_alarma(int seconds){
 void setAlarm(char* arguments[]) {
     for (int i = 0; i < 4; i++) {
         if (arguments[i] == NULL) {
-            std::cout << COLOR_RED <<  "Se necesitan más argumentos" << COLOR_NONE << "\n";
+            std::cout << COLOR_RED << "Needs more arguments" << COLOR_NONE << "\n";
             break;  
         }
     }
 
     if (strcmp(arguments[1], "recordatorio")) {
-        std::cout << COLOR_RED << "Argumento incorrecto" << COLOR_NONE << "\n";
+        std::cout << COLOR_RED << "Incorrect argument" << COLOR_NONE << "\n";
         return;
     }
 
     if(arguments[2]== NULL){
-        std::cout << COLOR_RED << "Argumento incorrecto" << COLOR_NONE << "\n";
+        std::cout << COLOR_RED << "Incorrect argument" << COLOR_NONE << "\n";
         return;
 
     }
 
     if (arguments[3]==NULL){
-        std::cout << COLOR_RED << "Argumento incorrecto" << COLOR_NONE << "\n";
+        std::cout << COLOR_RED << "Incorrect argument" << COLOR_NONE << "\n";
         return;
 
     }
@@ -165,11 +165,11 @@ void setAlarm(char* arguments[]) {
         segundos = stoi(arguments[2]);
         } 
         catch (const std::invalid_argument& e) {
-            std::cout << COLOR_RED << "Error: '" << arguments[2] << "' no es un número válido." << COLOR_NONE << "\n";
+            std::cout << COLOR_RED << "Error: '" << arguments[2] << "' is not a valid number." << COLOR_NONE << "\n";
         }
 
     if(segundos <= 0){
-        std::cout << COLOR_RED << "Numero invalido, numero debe ser mayor que 0" << COLOR_NONE << "\n";
+        std::cout << COLOR_RED << "Invalid number, must be greater than zero" << COLOR_NONE << "\n";
         return;
     }
 
@@ -196,7 +196,7 @@ void setAlarm(char* arguments[]) {
 		std::cout << COLOR_CYN << "[" << directory << "]" <<  COLOR_NONE << ": ";
         exit(0);
     } else if (pid < 0) {
-        std::cout << COLOR_RED << "Error al crear el proceso hijo." << COLOR_NONE << "\n";
+        std::cout << COLOR_RED << "Error creating child process." << COLOR_NONE << "\n";
     }
 
 

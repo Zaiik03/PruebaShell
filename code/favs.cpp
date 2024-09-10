@@ -34,7 +34,7 @@ void createFile(std::string ruta){
 		config << ruta;
 		config.close();
 	}
-	std::cout << MAGENTA << "Arhivo creado exitosamente en "<< ruta << RESET << "\n";
+	std::cout << MAGENTA << "File created succesfully in "<< ruta << RESET << "\n";
 
 	file.close();
 	config.close();
@@ -60,7 +60,7 @@ std::string readConfig(){
 void showSessionCommands(){
 	std::ifstream tempFile("/tmp/currentSession.txt");
 	std::string command;
-	std::cout << MAGENTA << "Comandos usados en la sesión actual: " << RESET << "\n";
+	std::cout << MAGENTA << "Commands used in current session: " << RESET << "\n";
 	if(tempFile.is_open())
 	{
 		while(std::getline(tempFile, command))
@@ -91,14 +91,14 @@ void showFavCommands(std::string ruta){
 
 	if(isEmpty)
 	{
-		std::cout << RED << "No hay comandos favoritos agregados para mostrar" << RESET << "\n";
+		std::cout << RED << "No favorite commands in file to show" << RESET << "\n";
 		return;
 	}
 
 	std::ifstream fav(ruta);
 	
 	std::string command;
-	std::cout << MAGENTA << "Comandos favoritos: " << RESET << "\n";
+	std::cout << MAGENTA << "Favorite commands in file: " << RESET << "\n";
 	if(fav.is_open())
 	{
 		while(std::getline(fav, command))
@@ -115,14 +115,14 @@ void deleteCommands(std::string ruta){
 
 	if(isEmpty)
 	{
-		std::cout << RED << "No hay comandos favoritos para borrar" << RESET << "\n";
+		std::cout << RED << "No favorite commands to delete from persistent file" << RESET << "\n";
 		return;
 	}
 
 	std::ofstream favs(ruta, std::ios::trunc);
 	if(favs.is_open())
 	{
-		std::cout << MAGENTA << "Comandos favoritos eliminados" << RESET << "\n";
+		std::cout << MAGENTA << "Favorite commands deleted from persistent file" << RESET << "\n";
 	}
 
 	favs.close();
@@ -141,7 +141,7 @@ void deleteNumCommands(std::string commandsIndex){
 				try{
 					numbers.push_back(std::stoi(token));
 				} catch(std::invalid_argument& e){
-					std::cout << RED << "Error: " << token << " no es un número" << RESET << "\n";
+					std::cout << RED << "Error: " << token << " is not a number" << RESET << "\n";
 					return;
 				}
 				token.clear();
@@ -157,7 +157,7 @@ void deleteNumCommands(std::string commandsIndex){
 		try{
 			numbers.push_back(std::stoi(token));
 		} catch(std::invalid_argument& e){
-			std::cout << RED << "Error: " << token << " no es un número" << RESET << "\n";
+			std::cout << RED << "Error: " << token << " is not a number" << RESET << "\n";
 			return;
 		}
 	}
@@ -188,7 +188,7 @@ void deleteNumCommands(std::string commandsIndex){
 
 	newFav.close();
 	
-	std::cout << MAGENTA << "Comandos eliminados correctamente." << RESET << "\n";
+	std::cout << MAGENTA << "Commands deleted successfully from current session" << RESET << "\n";
 	
 }
 
@@ -202,7 +202,7 @@ std::string extractCommand(std::string line){
 }
 
 void saveSessionCommands(std::string& ruta){
-	std::cout << MAGENTA << "Guardando archivo" << RESET << "\n";
+	std::cout << MAGENTA << "Saving file" << RESET << "\n";
 	std::ofstream file(ruta, std::ios::app);
 	std::ifstream tempFile("/tmp/currentSession.txt");
 	std::vector<std::string> currentFavCommands;
@@ -235,7 +235,7 @@ void saveSessionCommands(std::string& ruta){
 		tempFile.close();
 
 	} else{
-		std::cout << RED <<  "Error al abrir archivo temporal de comandos" << RESET << "\n";
+		std::cout << RED <<  "Error while opening temporal archive" << RESET << "\n";
 	}
 
 	if(file.is_open())
@@ -244,10 +244,10 @@ void saveSessionCommands(std::string& ruta){
 			file << commandNumber++ << ". "<< command << std::endl;
 		}
 
-		std::cout << MAGENTA << "Comandos guardados en: " << ruta << RESET << "\n";
+		std::cout << MAGENTA << "Commands saved successfully in: " << ruta << RESET << "\n";
 		file.close();
 	} else{
-		std::cout << RED << "Error al abrir el archivo para guardar" << RESET << "\n";
+		std::cout << RED << "Error while opening file to save" << RESET << "\n";
 	}
 
 
@@ -303,7 +303,7 @@ void execCommand(std::string numCommandA){
 			if(pid == 0)
 			{
 				execvp(command.c_str(), args);
-				std::cout << RED << "Error al ejecutar el comando" << RESET << "\n";
+				std::cout << RED << "Error while executing command" << RESET << "\n";
 			} else{
 				waitpid(pid, NULL, 0);
 			}
@@ -318,14 +318,14 @@ void execCommand(std::string numCommandA){
 void resetFavs(std::string ruta){
 	remove("/tmp/config.txt");
 	remove(ruta.c_str());
-	std::cout << MAGENTA << "Favs reiniciado correctamente" << RESET << "\n";
-	std::cout << MAGENTA << "Se borró su archivo de comandos favoritos" << RESET << "\n";
+	std::cout << MAGENTA << "Favs reset successfully" << RESET << "\n";
+	std::cout << MAGENTA << "Favorite commands file deleted" << RESET << "\n";
 }
 
 int main(int argc, char *argv[]){
 	if(argc < 2)
 	{
-		std::cout << RED << "Debe especificar un comando" << RESET << "\n";
+		std::cout << RED << "Must specify a command" << RESET << "\n";
 		return 1;
 	}
 
@@ -335,7 +335,7 @@ int main(int argc, char *argv[]){
 	{   
 		if(argv[2] == NULL)
 		{
-			std::cout << RED << "Debe especificar una ruta" << RESET <<"\n";
+			std::cout << RED << "Must specify a path" << RESET <<"\n";
 		} else{
 			createFile(argv[2]);
 		}
@@ -347,8 +347,8 @@ int main(int argc, char *argv[]){
 		{
 			saveSessionCommands(ruta);
 		} else{
-			std::cout << RED << "Primero debe crear un archivo para guardar comandos favoritos." << RESET <<"\n";
-			std::cout << RED << "Puede usar <<favs crear ruta/miarchivo.txt>>" << RESET << "\n";
+			std::cout << RED << "First you need to create a file to save favorite commands" << RESET <<"\n";
+			std::cout << RED << "You can use <<favs crear ruta/miarchivo.txt>>" << RESET << "\n";
 		}
 	}
 
@@ -365,8 +365,8 @@ int main(int argc, char *argv[]){
 		{
 			showFavCommands(ruta);
 		} else{
-			std::cout << RED << "No hay comandos favoritos" << RESET << "\n";
-			std::cout << RED << "Puede usar <<favs guardar>>" << RESET <<"\n";
+			std::cout << RED << "No favorite commands saved in file" << RESET << "\n";
+			std::cout << RED << "You can use <<favs guardar>>" << RESET <<"\n";
 		}
 	}
 
@@ -376,7 +376,7 @@ int main(int argc, char *argv[]){
 		{
 			deleteCommands(ruta);
 		} else{
-			std::cout << RED << "No hay comandos favoritos para borrar" << RESET << "\n";
+			std::cout << RED << "No favorite commands in file to delete" << RESET << "\n";
 		}
 	}
 
@@ -387,20 +387,20 @@ int main(int argc, char *argv[]){
 
 			if(argv[3] != NULL)
 			{
-				std::cout << RED << "El formato correcto es 'num1,num2...'" << RESET <<"\n";
+				std::cout << RED << "Correct format is 'num1,num2...'" << RESET <<"\n";
 			} else{
 
 				if(argv[2] != NULL)
 				{
 					deleteNumCommands(argv[2]);
-				} else{
-					std::cout << RED << "Debe especificar índices de comandos favoritos a eliminar" << RESET << "\n";
+				} else{ 
+					std::cout << RED << "Must specify the numbers associated with the favorite commands to delete" << RESET << "\n";
 				}
 
 			}
 	
 		} else{
-			std::cout << RED << "No hay comandos favoritos para borrar" << RESET << "\n";
+			std::cout << RED << "No favorite commands to delete" << RESET << "\n";
 		}
 		
 	}
@@ -412,7 +412,7 @@ int main(int argc, char *argv[]){
 		{
 			searchSubString(argv[2]);
 		} else{
-			std::cout << RED << "Debe especificar una cadena para buscar" << RESET << "\n";
+			std::cout << RED << "Must specify the substring to search" << RESET << "\n";
 		}
 
 	}
@@ -422,6 +422,8 @@ int main(int argc, char *argv[]){
 		if(!ruta.empty())
 		{
 			resetFavs(ruta);
+		} else{
+			std::cout << RED << "No favorite file to delete" << RESET << "\n"; 
 		}
 		
 	}
@@ -430,9 +432,10 @@ int main(int argc, char *argv[]){
 	{
 		if(argv[1] != NULL)
 		{
+			std::cout << MAGENTA << "Executing from current session commands" << MAGENTA << "\n";
 			execCommand(argv[1]);
-		} else{
-			std::cout << RED << "Debe especificar el número del comando a ejecutar" << RESET << "\n";
+		} else{ 
+			std::cout << RED << "Must specify the number associated with the command to execute" << RESET << "\n";
 		}
 	}
 	
