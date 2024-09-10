@@ -2,7 +2,7 @@
 
 ## Cómo compilar
 
-Para copilar el proyecto, se deben ejecutar los siguientes comandos en la carpeta base del repositorio:
+Para compilar el proyecto, se deben ejecutar los siguientes comandos en la carpeta base del repositorio:
 
 ```bash
 ~/../[nombre-repositorio]$ make --directory ./code
